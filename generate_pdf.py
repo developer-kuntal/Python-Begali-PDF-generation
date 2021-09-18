@@ -15,8 +15,12 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from bijoy2unicode import converter
 # from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 import bn_unicode_converter.stm as engine
+import bijoy_unicode_mapping.bangla_handler as translate
+from docx import Document
+from docx.shared import Pt
 
 pdfmetrics.registerFont(TTFont('AmarBangla', r'D:\PythonProject\dictionary_project\fonts\AmarBangla.ttf'))
 pdfmetrics.registerFont(TTFont('AmarBanglaBold', r'D:\PythonProject\dictionary_project\fonts\AmarBanglaBold.ttf'))
@@ -68,6 +72,12 @@ styles.add(ParagraphStyle(fontName='Bangla', name='Bangla', leading=15, fontSize
 
 stopwords = nltk.corpus.stopwords.words('english') # take the list of enlish stopword(like the, a, an, he, she, his, him etc. )
 
+
+# test = converter.Unicode()
+# another_text = "বেষ্টিত"
+# toPrint=test.convertUnicodeToBijoy(another_text)
+# print(toPrint)
+
 def remove_stopwords(txt_tokenized):
     txt_clean =[word for word in txt_tokenized if word not in stopwords]
     return txt_clean
@@ -89,14 +99,7 @@ build_flow_obj = []
 sstr = """<!DOCTYPE html><html>
             <head>
                 <meta charset="UTF-8" />
-                <!-- <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Mina&display=swap');
-                    .bengaliFont {
-                        font-family: 'Mina', sans-serif;
-                    }
-                </style> -->
             </head>
-
             <body>
         """
 flow_obj = Paragraph(sstr)
@@ -109,6 +112,15 @@ print(b'\xe0\xa6\x85\xe0\xa6\xa8\xe0\xa7\x81\xe0\xa6\x97\xe0\xa7\x8d\xe0\xa6\xb0
 
 # gs = goslate.Goslate()
 # gs.translate(word, 'bn') 
+test = converter.Unicode()
+
+
+# document = Document()
+# style = document.styles['Normal']
+# font = style.font
+# font.name = 'AmarBangla'
+# font.size = Pt(12)
+
 
 for page in doc:
     # print(page.getText())
@@ -154,15 +166,34 @@ for page in doc:
         wrd = meanings[0]
         bn_m = meanings[1]
         # print(u"অনুগ্রহ")
-        bn_m_en = bn_m.encode("utf-8")
+        print(bn_m)
+        # tst = bn_m.encode("utf-8")
+        # print(tst)
+        # bn_m_en = bn_m.encode("utf-8").decode('unicode-escape')
+        # bn_m_en = [ bn_m[c].encode("utf-8").decode('unicode-escape') for c in range(len(bn_m)) ]
+        # print("UTF-8 ENCODE", bn_m_en)
         optxt = ""
         try:
-            optxt = engine.convert(bn_m_en)
+            
+            # bn_m_en = translate.translate(bn_m)
+            # print("TTT: ",bn_m_en)
+            # optxt = [ engine.convert(bn_m_en[c]) for c in range(len(bn_m_en)) ]
+            # print("Converted Text:", optxt)
+            optxt_u = test.convertUnicodeToBijoy(bn_m)
+            opttxt = test.convertBijoyToUnicode(optxt_u) #আমাদের
+            # print("Converted Text:", optxt) #কায়েদা প্রতিষ্ঠার
         except TypeError:
             pass
+        except IndexError:
+            print("Index Error: ",bn_m)
+            pass
+
         try:
-            build_text+=f"(<p>{wrd} <font face='Bangla'>{optxt}</font></p>) "
+            build_text+=f"(<p>{wrd} <font face='Nikosh'>{opttxt}</font></p>) "
+            # document.add_paragraph(f"({wrd} {opttxt})")
         except NameError:
+            pass
+        except IndexError:
             pass
 
     flow_obj = Paragraph(build_text)
@@ -174,6 +205,8 @@ sstr = """</body>
 flow_obj = Paragraph(sstr)
 build_flow_obj.append(flow_obj)
 pdf.build(build_flow_obj)
+
+# document.save('sample.docx')
 
 endtime = time.time()
 print(f"Time taken to generate PDF is: {(endtime-starttime)/60.0} minutes")
