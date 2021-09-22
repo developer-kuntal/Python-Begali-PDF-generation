@@ -33,7 +33,7 @@ def collect_duplicate_words(txt1, txt2) :
         return txt
 
 # filename = r'D:\PythonProject\dictionary_project\Malgudi Days.pdf'
-filename2 = r'D:\PythonProject\dictionary_project\ASURA TALE OF THE VANQUISHED The Story of Ravana.pdf'
+filename2 = r'D:\PythonProject\dictionary_project\Aghora_ at the left hand of God ( PDFDrive ).pdf'
 # filename3 = r'D:\PythonProject\dictionary_project\Dharmayoddha Kalki _ Avatar of Vishnu.pdf'
 # filename4 = r'D:\PythonProject\dictionary_project\Digital Electronics And Logic Design.pdf'
 # filename5 = r'D:\PythonProject\dictionary_project\Catcher in the Rye.pdf'
@@ -49,13 +49,14 @@ starttime = time.time()
 document = Document()
 
 token_words = []
+no_of_pages = doc.page_count
 
 for page in doc:
 
     # print(page.getText())
-    # if page.number == 4:
-    #     break
-    print(f"Page: {page.number}")
+    if page.number == 20:
+        break
+    print(f"Page: {page.number}/{no_of_pages}")
 
     text = page.getText()
     lowerText = text.lower()
@@ -85,8 +86,12 @@ for page in doc:
     font = style.font
     font.name = "Kalpurush"
     font.size = Pt(16)
+    font.color.rgb = RGBColor(0x6B, 0x25, 0x31) #6b2531
 
     paragraph = document.add_paragraph(remove_extra_spaces(text))
+    # font = paragraph.add_run().font
+    # font.color.rgb = RGBColor(0x6B, 0x25, 0x31) #6b2531
+
     paragraph.add_run("\n\n")
 
     for word in words:
@@ -103,22 +108,28 @@ for page in doc:
                 pass
         else:
             with open(r'D:\PythonProject\dictionary_project\data\unkwon_word.txt','a') as f:
-                f.write(word)
+                try:
+                    f.write(word)
+                except UnicodeEncodeError:
+                    pass
                 f.write('\n')
-                f.close()
-
+                
     for meanings in words_meanings:
         wrd = meanings[0]
         bn_m = meanings[1]
         
         try:
             # word_list += f"({wrd} {bn_m}) "
-            
+            # paragraph2 = document.add_paragraph(f"({wrd} ")
             paragraph.add_run(f"({wrd} ")
+            # styles = document.styles
+            # styles['Normal'].next_paragraph_style =  styles['Body Text']
+            # style = styles.add_style('Citation')
+            # font = styles.font
+            # font.color.rgb = RGBColor(0x6B, 0x25, 0x31)
             paragraph.add_run(f"{bn_m}) ").bold = True
-            # font = paragraph.add_run().font
-            # font.color.rgb = RGBColor(0x42, 0x24, 0xE9)
-
+            # font = paragraph2.add_run().font
+            
         except TypeError:
             pass
         except IndexError:
@@ -131,6 +142,7 @@ for page in doc:
 
 document.add_page_break()
 document.save('sample.docx')
+f.close()
 # convert(r"D:\PythonProject\dictionary_project\sample.docx", r"D:\PythonProject\dictionary_project\output.pdf")
 endtime = time.time()
 print(f"Time taken to generate PDF is: {(endtime-starttime)/60.0} minutes")
